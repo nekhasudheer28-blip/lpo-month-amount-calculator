@@ -1,1 +1,1 @@
-window.LPO_API_URL = "http://127.0.0.1:8001";
+window.LPO_API_URL = "https://lpo-calculator-backend.onrender.com";
