@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LPO- Month & Amount Calculator</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace">
+        <div class="title-row">
+          <div>
+            <p class="eyebrow">Excel automation</p>
+            <h1>LPO- Month & Amount Calculator</h1>
+          </div>
+          <div class="sheet-icon" aria-hidden="true"></div>
+        </div>
+
+        <label id="uploadZone" class="upload-zone">
+          <div class="upload-icon" aria-hidden="true"></div>
+          <span id="fileName">Drop the LPO Excel file here</span>
+          <small>Only the LPO MAT - PO sheet will be processed.</small>
+          <input id="fileInput" type="file" accept=".xlsx" />
+        </label>
+
+        <div class="action-row">
+          <button id="taskAButton" disabled>
+            <span class="button-icon check-icon" aria-hidden="true"></span>
+            Run Task A
+          </button>
+
+          <button id="taskBButton" disabled>
+            <span class="button-icon check-icon" aria-hidden="true"></span>
+            Run Task B
+          </button>
+
+          <a id="downloadButton" class="download-button hidden" href="#" download>
+            <span class="button-icon download-icon" aria-hidden="true"></span>
+            Download Excel
+          </a>
+        </div>
+
+        <div id="errorBox" class="error hidden"></div>
+
+        <div id="summaryGrid" class="summary-grid hidden"></div>
+
+        <section id="selectorPanel" class="selector-panel hidden">
+          <div class="selector-head">
+            <h2>Job numbers</h2>
+            <span id="selectedCount">0 selected</span>
+          </div>
+          <input id="searchInput" class="search-input" placeholder="Search job number" />
+          <div id="jobList" class="job-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./src/config.js"></script>
+    <script src="./src/app.js"></script>
+  </body>
+</html>
