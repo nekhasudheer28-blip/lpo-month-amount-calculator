@@ -264,6 +264,9 @@ def _run_task_a(ws, values_ws, delivery_map: dict[str, int], payment_map: dict[s
                 "paymentOk": payment_ok,
             })
 
+    delivery_unresolved = sum(1 for d in highlighted_row_details if not d["deliveryOk"])
+    payment_unresolved  = sum(1 for d in highlighted_row_details if not d["paymentOk"])
+
     return {
         "totalRows": total_rows,
         "closedRows": closed_rows,
@@ -273,6 +276,8 @@ def _run_task_a(ws, values_ws, delivery_map: dict[str, int], payment_map: dict[s
         "deliveryCellsWritten": delivery_cells_written,
         "paymentCellsWritten": payment_cells_written,
         "highlightedRowDetails": highlighted_row_details,
+        "deliveryUnresolvedCount": delivery_unresolved,
+        "paymentUnresolvedCount": payment_unresolved,
     }
 
 
@@ -349,6 +354,7 @@ def _run_task_b(ws, values_ws, selected_job_numbers: list[str]) -> dict:
             "jobNumber": job_number,
             "rows": all_rows.get(job_number, []),
             "total": formatted,
+            "placedAtRow": row,
         })
 
     return {"taskBTotalsWritten": totals_written, "taskBJobTotals": job_totals}

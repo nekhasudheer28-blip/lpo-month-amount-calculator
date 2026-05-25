@@ -762,7 +762,88 @@ button:disabled {
 }
 .modal-done-btn:hover { background: #046c4e; }
 
-/* extra column in modal totals table */
+/* ── Task B modal table — dark navy header + alternating rows ── */
+.task-b-table thead th {
+  background: #1e293b;
+  color: #fff;
+  border-bottom: none;
+}
+
+.task-b-table tbody tr:nth-child(odd)  { background: #fff; }
+.task-b-table tbody tr:nth-child(even) { background: #f8fafc; }
+.task-b-table tbody tr:hover           { background: #eff6ff; }
+
+.bold-amount {
+  font-weight: 800;
+  color: #065f46;
+  font-size: 14px;
+}
+
+.placed-at {
+  font-size: 12px;
+  color: #475569;
+  white-space: nowrap;
+}
+
+/* Rows Found cell — horizontal scroll within the cell */
+.rows-scroll {
+  display: block;
+  max-width: 200px;
+  overflow-x: auto;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+  padding-bottom: 2px;
+}
+
+/* ── Job chips (above Task B results table) ─────────────────── */
+.job-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.job-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid #93c5fd;
+  white-space: nowrap;
+}
+
+/* ── Success banner ─────────────────────────────────────────── */
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  background: #d1fae5;
+  border: 1px solid #6ee7b7;
+  border-radius: 7px;
+  color: #065f46;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ── Warn-accent metric card (unresolved counts) ─────────────── */
+.metric-warn strong {
+  color: #b45309;
+}
+
+.metric-warn {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+/* legacy row-list alias kept for any old references */
 .totals-table td.row-list {
   color: #64748b;
   font-size: 12px;

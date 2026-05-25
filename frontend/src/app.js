@@ -72,7 +72,7 @@ taskBButton.addEventListener("click", () => processWorkbook([...state.selectedJo
 searchInput.addEventListener("input", renderJobList);
 
 modalCloseBtn.addEventListener("click", closeModal);
-modalDoneBtn.addEventListener("click", closeModal);
+modalDoneBtn.addEventListener("click", closeModalAndDownload);
 
 // Close modal when clicking outside
 taskBModalOverlay.addEventListener("click", (e) => {
@@ -83,6 +83,12 @@ function closeModal() {
   taskBModalOverlay.classList.add("hidden");
   downloadRow.classList.remove("hidden");
   downloadRow.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function closeModalAndDownload() {
+  taskBModalOverlay.classList.add("hidden");
+  downloadRow.classList.remove("hidden");
+  downloadButton.click();
 }
 
 // ── Core fetch ───────────────────────────────────────────────────
@@ -142,27 +148,29 @@ async function processWorkbook(selectedJobs, isTaskB) {
   }
 }
 
-// ── Summary (7 cards) ────────────────────────────────────────────
+// ── Summary (9 cards) ────────────────────────────────────────────
 function renderSummary(summary) {
   state.highlightedDetails = summary.highlightedRowDetails || [];
   const hlCount = summary.taskAHighlightedRows || 0;
 
   const metrics = [
-    { label: "Total Job No. Rows",           value: summary.totalRows            ?? 0 },
-    { label: "Open Rows Processed",          value: summary.openRows             ?? 0 },
-    { label: "Closed Rows",                  value: summary.closedRows           ?? 0 },
-    { label: "Rows Highlighted",             value: hlCount,
+    { label: "Total Job No. Rows",              value: summary.totalRows                ?? 0 },
+    { label: "Open Rows Processed",             value: summary.openRows                 ?? 0 },
+    { label: "Closed Rows",                     value: summary.closedRows               ?? 0 },
+    { label: "Rows Highlighted",                value: hlCount,
       extra: hlCount > 0
         ? `<button class="expand-btn" onclick="toggleHighlightedPanel()">&#9660; View ${hlCount} rows</button>`
         : "" },
-    { label: "Delivery Cells Concluded",     value: summary.deliveryCellsWritten ?? 0 },
-    { label: "Payment Due Cells Concluded",  value: summary.paymentCellsWritten  ?? 0 },
-    { label: "Totals Written",               value: summary.taskBTotalsWritten   ?? 0 },
+    { label: "Delivery Cells Concluded",        value: summary.deliveryCellsWritten     ?? 0 },
+    { label: "Payment Due Cells Concluded",     value: summary.paymentCellsWritten      ?? 0 },
+    { label: "Totals Written",                  value: summary.taskBTotalsWritten       ?? 0 },
+    { label: "Delivery Unresolved Rows",        value: summary.deliveryUnresolvedCount  ?? 0, accent: "warn" },
+    { label: "Payment Due Unresolved Rows",     value: summary.paymentUnresolvedCount   ?? 0, accent: "warn" },
   ];
 
   summaryGrid.innerHTML = metrics
-    .map(({ label, value, extra }) => `
-      <div class="metric">
+    .map(({ label, value, extra, accent }) => `
+      <div class="metric${accent ? " metric-" + accent : ""}">
         <span>${label}</span>
         <strong>${value}</strong>
         ${extra || ""}
@@ -274,26 +282,36 @@ function renderUnresolvedRows(details) {
 
 // ── Task B modal ─────────────────────────────────────────────────
 function renderTaskBModal(jobTotals) {
-  const rows = jobTotals
+  const count = jobTotals.length;
+
+  const chips = jobTotals
+    .map((item) => `<span class="job-chip">${escapeHtml(item.jobNumber)}</span>`)
+    .join("");
+
+  const tableRows = jobTotals
     .map((item) => `
       <tr>
         <td class="job-number">${escapeHtml(item.jobNumber)}</td>
-        <td class="row-list">${(item.rows || []).join(", ")}</td>
-        <td class="amount">${escapeHtml(item.total)}</td>
+        <td><div class="rows-scroll">${(item.rows || []).join(", ")}</div></td>
+        <td class="amount bold-amount">${escapeHtml(item.total)}</td>
+        <td class="placed-at">Row ${item.placedAtRow ?? "—"}, Col Y</td>
       </tr>`)
     .join("");
 
   modalBody.innerHTML = `
+    <div class="job-chips">${chips}</div>
+    <div class="success-banner">&#10003; Totals calculated for ${count} job number${count !== 1 ? "s" : ""}.</div>
     <div class="table-scroll">
-      <table class="totals-table">
+      <table class="totals-table task-b-table">
         <thead>
           <tr>
             <th>Job Number</th>
-            <th>Row(s)</th>
+            <th>Rows Found</th>
             <th>Total LPO Amount</th>
+            <th>Placed at Row</th>
           </tr>
         </thead>
-        <tbody>${rows}</tbody>
+        <tbody>${tableRows}</tbody>
       </table>
     </div>`;
 
