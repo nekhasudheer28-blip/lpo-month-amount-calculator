@@ -129,6 +129,7 @@ async function processWorkbook(selectedJobs, isTaskB) {
     let summary = {};
     if (summaryHeader) {
       summary = JSON.parse(summaryHeader);
+      console.log("SUMMARY FROM BACKEND:", summary);
       renderSummary(summary);
     }
 
@@ -150,22 +151,24 @@ async function processWorkbook(selectedJobs, isTaskB) {
 
 // ── Summary (9 cards) ────────────────────────────────────────────
 function renderSummary(summary) {
-  state.highlightedDetails = summary.highlightedRowDetails || [];
-  const hlCount = summary.taskAHighlightedRows || 0;
+  const details = summary.highlightedRowDetails || [];
+  state.highlightedDetails = details;
+
+  const hlCount = summary.taskAHighlightedRows ?? 0;
 
   const metrics = [
-    { label: "Total Job No. Rows",              value: summary.totalRows                ?? 0 },
-    { label: "Open Rows Processed",             value: summary.openRows                 ?? 0 },
-    { label: "Closed Rows",                     value: summary.closedRows               ?? 0 },
-    { label: "Rows Highlighted",                value: hlCount,
+    { label: "Total Job No. Rows",            value: summary.totalRows               ?? 0 },
+    { label: "Open Rows Processed",           value: summary.openRows                ?? 0 },
+    { label: "Closed Rows",                   value: summary.closedRows              ?? 0 },
+    { label: "Rows Highlighted",              value: hlCount,
       extra: hlCount > 0
         ? `<button class="expand-btn" onclick="toggleHighlightedPanel()">&#9660; View ${hlCount} rows</button>`
         : "" },
-    { label: "Delivery Cells Concluded",        value: summary.deliveryCellsWritten     ?? 0 },
-    { label: "Payment Due Cells Concluded",     value: summary.paymentCellsWritten      ?? 0 },
-    { label: "Totals Written",                  value: summary.taskBTotalsWritten       ?? 0 },
-    { label: "Delivery Unresolved Rows",        value: summary.deliveryUnresolvedCount  ?? 0, accent: "warn" },
-    { label: "Payment Due Unresolved Rows",     value: summary.paymentUnresolvedCount   ?? 0, accent: "warn" },
+    { label: "Delivery Cells Concluded",      value: summary.deliveryCellsWritten    ?? 0 },
+    { label: "Payment Due Cells Concluded",   value: summary.paymentCellsWritten     ?? 0 },
+    { label: "Delivery Unresolved Rows",      value: summary.deliveryUnresolvedCount ?? 0, accent: "warn" },
+    { label: "Payment Due Unresolved Rows",   value: summary.paymentUnresolvedCount  ?? 0, accent: "warn" },
+    { label: "Totals Written",                value: summary.taskBTotalsWritten      ?? 0 },
   ];
 
   summaryGrid.innerHTML = metrics
@@ -179,23 +182,25 @@ function renderSummary(summary) {
 
   summaryGrid.classList.remove("hidden");
 
-  renderHighlightedPanel(state.highlightedDetails);
-  renderUnresolvedRows(state.highlightedDetails);
+  renderHighlightedPanel(details);
+  renderUnresolvedRows(details);
 }
 
 // ── Highlighted panel (collapsible compact list) ─────────────────
 function renderHighlightedPanel(details) {
-  if (details.length === 0) {
+  if (!details || details.length === 0) {
     highlightedPanel.classList.add("hidden");
     return;
   }
 
   highlightedList.innerHTML = details
     .map((d) => {
+      const dOk = d.deliveryOk === true;
+      const pOk = d.paymentOk === true;
       let badge;
-      if (!d.deliveryOk && !d.paymentOk) {
+      if (!dOk && !pOk) {
         badge = '<span class="badge badge-red">Both &#10007;</span>';
-      } else if (!d.deliveryOk) {
+      } else if (!dOk) {
         badge = '<span class="badge badge-orange">Delivery &#10007;</span>';
       } else {
         badge = '<span class="badge badge-orange">Payment Due &#10007;</span>';
@@ -233,7 +238,7 @@ function closeHighlightedPanel() {
 
 // ── Unresolved rows section (full table) ─────────────────────────
 function renderUnresolvedRows(details) {
-  if (details.length === 0) {
+  if (!details || details.length === 0) {
     unresolvedContent.innerHTML =
       '<div class="all-resolved">&#10003; All rows resolved — no manual review needed.</div>';
     unresolvedSection.classList.remove("hidden");
@@ -242,10 +247,12 @@ function renderUnresolvedRows(details) {
 
   const rows = details
     .map((d) => {
+      const dOk = d.deliveryOk === true;
+      const pOk = d.paymentOk === true;
       let issueText, issueCls;
-      if (!d.deliveryOk && !d.paymentOk) {
+      if (!dOk && !pOk) {
         issueText = "Both unresolved";  issueCls = "issue-both";
-      } else if (!d.deliveryOk) {
+      } else if (!dOk) {
         issueText = "Delivery unresolved";  issueCls = "issue-one";
       } else {
         issueText = "Payment unresolved";  issueCls = "issue-one";
