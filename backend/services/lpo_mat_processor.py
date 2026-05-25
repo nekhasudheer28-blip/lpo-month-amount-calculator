@@ -6,7 +6,7 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 
 from openpyxl import load_workbook
-from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 from services.term_parser import parse_term
@@ -38,6 +38,9 @@ REQUIRED_HEADERS = {
 
 PALE_YELLOW = "FFF2CC"
 HEADER_BLUE = "D9EAF7"
+
+_THIN = Side(style="thin")
+THIN_BORDER = Border(left=_THIN, right=_THIN, top=_THIN, bottom=_THIN)
 
 
 @dataclass
@@ -72,6 +75,8 @@ def process_lpo_workbook(
     job_numbers = _unique_job_numbers(ws)
     task_b_summary = _run_task_b(ws, values_ws, selected_job_numbers)
     summary.update(task_b_summary)
+
+    _apply_borders(ws)
 
     output = io.BytesIO()
     workbook.save(output)
@@ -301,14 +306,24 @@ def _run_task_b(ws, values_ws, selected_job_numbers: list[str]) -> dict:
         totals[job_number] = totals.get(job_number, Decimal("0")) + amount
         last_rows[job_number] = row
 
+    job_totals = []
+
     for job_number, total in totals.items():
         row = last_rows[job_number]
-        ws.cell(row, TOTAL_COL).value = f"Total LPO_Amount ({job_number}): {_format_decimal(total)}"
+        formatted = _format_decimal(total)
+        ws.cell(row, TOTAL_COL).value = f"Total LPO_Amount ({job_number}): {formatted}"
         ws.cell(row, TOTAL_COL).fill = PatternFill("solid", fgColor="E2F0D9")
         ws.column_dimensions[get_column_letter(TOTAL_COL)].width = 34
         totals_written += 1
+        job_totals.append({"jobNumber": job_number, "total": formatted})
 
-    return {"taskBTotalsWritten": totals_written}
+    return {"taskBTotalsWritten": totals_written, "taskBJobTotals": job_totals}
+
+
+def _apply_borders(ws):
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
+        for cell in row:
+            cell.border = THIN_BORDER
 
 
 def _as_datetime(value) -> datetime | None:

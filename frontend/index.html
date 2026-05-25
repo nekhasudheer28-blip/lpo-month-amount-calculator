@@ -7,53 +7,95 @@
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
   <body>
-    <main class="app-shell">
-      <section class="workspace">
-        <div class="title-row">
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="header-brand">
+          <div class="brand-icon" aria-hidden="true"></div>
           <div>
-            <p class="eyebrow">Excel automation</p>
-            <h1>LPO- Month & Amount Calculator</h1>
+            <p class="brand-sub">Excel Automation</p>
+            <h1>LPO Month &amp; Amount Calculator</h1>
           </div>
-          <div class="sheet-icon" aria-hidden="true"></div>
         </div>
+      </div>
+    </header>
 
-        <label id="uploadZone" class="upload-zone">
-          <div class="upload-icon" aria-hidden="true"></div>
-          <span id="fileName">Drop the LPO Excel file here</span>
-          <small>Only the LPO MAT - PO sheet will be processed.</small>
-          <input id="fileInput" type="file" accept=".xlsx" />
-        </label>
+    <main class="app-body">
+      <div class="workspace">
 
-        <div class="action-row">
-          <button id="taskAButton" disabled>
-            <span class="button-icon check-icon" aria-hidden="true"></span>
-            Run Task A
-          </button>
+        <!-- Step 1: Upload -->
+        <section class="step-section">
+          <div class="step-label">
+            <span class="step-badge">1</span>
+            <span>Upload Excel File</span>
+          </div>
 
-          <button id="taskBButton" disabled>
-            <span class="button-icon check-icon" aria-hidden="true"></span>
-            Run Task B
-          </button>
+          <label id="uploadZone" class="upload-zone">
+            <div class="upload-icon" aria-hidden="true"></div>
+            <span id="fileName">Drop the LPO Excel file here, or click to browse</span>
+            <small>Only <strong>LPO MAT - PO</strong> sheet will be processed &nbsp;·&nbsp; .xlsx only</small>
+            <input id="fileInput" type="file" accept=".xlsx" />
+          </label>
+        </section>
 
-          <a id="downloadButton" class="download-button hidden" href="#" download>
+        <!-- Step 2: Task A -->
+        <section class="step-section">
+          <div class="step-label">
+            <span class="step-badge">2</span>
+            <span>Calculate Delivery &amp; Payment Months</span>
+          </div>
+          <p class="step-desc">Scans every open row, calculates delivery and payment due months from LPO Date + terms, and fills the month columns.</p>
+          <div class="action-row">
+            <button id="taskAButton" disabled>
+              <span class="button-icon check-icon" aria-hidden="true"></span>
+              Run Task A
+            </button>
+          </div>
+        </section>
+
+        <div id="errorBox" class="error hidden"></div>
+        <div id="summaryGrid" class="summary-grid hidden"></div>
+
+        <!-- Step 3: Job selector -->
+        <section id="selectorPanel" class="step-section hidden">
+          <div class="step-label">
+            <span class="step-badge">3</span>
+            <span>Select Job Numbers for Totalling</span>
+          </div>
+          <p class="step-desc">Choose one or more job numbers to sum their LPO amounts. The total is written to column Y against the last matching row.</p>
+
+          <div class="selector-controls">
+            <input id="searchInput" class="search-input" placeholder="Search job number…" />
+            <span id="selectedCount" class="selected-badge">0 selected</span>
+          </div>
+
+          <div id="jobList" class="job-list"></div>
+
+          <div class="action-row" style="margin-top:16px">
+            <button id="taskBButton" disabled>
+              <span class="button-icon check-icon" aria-hidden="true"></span>
+              Run Task B — Calculate Totals
+            </button>
+          </div>
+        </section>
+
+        <!-- Step 4: Task B results -->
+        <section id="taskBResults" class="step-section results-panel hidden">
+          <div class="step-label">
+            <span class="step-badge success-badge">4</span>
+            <span>Task B Results — LPO Totals</span>
+          </div>
+          <div id="taskBTable"></div>
+        </section>
+
+        <!-- Download -->
+        <div id="downloadRow" class="download-row hidden">
+          <a id="downloadButton" class="download-button" href="#" download>
             <span class="button-icon download-icon" aria-hidden="true"></span>
-            Download Excel
+            Download Processed Excel
           </a>
         </div>
 
-        <div id="errorBox" class="error hidden"></div>
-
-        <div id="summaryGrid" class="summary-grid hidden"></div>
-
-        <section id="selectorPanel" class="selector-panel hidden">
-          <div class="selector-head">
-            <h2>Job numbers</h2>
-            <span id="selectedCount">0 selected</span>
-          </div>
-          <input id="searchInput" class="search-input" placeholder="Search job number" />
-          <div id="jobList" class="job-list"></div>
-        </section>
-      </section>
+      </div>
     </main>
 
     <script src="./src/config.js"></script>

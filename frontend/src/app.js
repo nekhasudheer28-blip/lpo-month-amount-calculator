@@ -7,32 +7,41 @@ const state = {
   downloadUrl: "",
 };
 
-const fileInput = document.getElementById("fileInput");
-const fileName = document.getElementById("fileName");
-const uploadZone = document.getElementById("uploadZone");
-const taskAButton = document.getElementById("taskAButton");
-const taskBButton = document.getElementById("taskBButton");
+const fileInput      = document.getElementById("fileInput");
+const fileName       = document.getElementById("fileName");
+const uploadZone     = document.getElementById("uploadZone");
+const taskAButton    = document.getElementById("taskAButton");
+const taskBButton    = document.getElementById("taskBButton");
 const downloadButton = document.getElementById("downloadButton");
-const errorBox = document.getElementById("errorBox");
-const summaryGrid = document.getElementById("summaryGrid");
-const selectorPanel = document.getElementById("selectorPanel");
-const searchInput = document.getElementById("searchInput");
-const jobList = document.getElementById("jobList");
-const selectedCount = document.getElementById("selectedCount");
+const downloadRow    = document.getElementById("downloadRow");
+const errorBox       = document.getElementById("errorBox");
+const summaryGrid    = document.getElementById("summaryGrid");
+const selectorPanel  = document.getElementById("selectorPanel");
+const searchInput    = document.getElementById("searchInput");
+const jobList        = document.getElementById("jobList");
+const selectedCount  = document.getElementById("selectedCount");
+const taskBResults   = document.getElementById("taskBResults");
+const taskBTable     = document.getElementById("taskBTable");
 
 fileInput.addEventListener("change", () => setFile(fileInput.files[0]));
 
-uploadZone.addEventListener("dragover", (event) => event.preventDefault());
-
-uploadZone.addEventListener("drop", (event) => {
-  event.preventDefault();
-  setFile(event.dataTransfer.files[0]);
+uploadZone.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  uploadZone.style.borderColor = "#1a56db";
 });
 
-taskAButton.addEventListener("click", () => processWorkbook([]));
+uploadZone.addEventListener("dragleave", () => {
+  uploadZone.style.borderColor = "";
+});
 
-taskBButton.addEventListener("click", () => processWorkbook([...state.selectedJobs]));
+uploadZone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  uploadZone.style.borderColor = "";
+  setFile(e.dataTransfer.files[0]);
+});
 
+taskAButton.addEventListener("click", () => processWorkbook([], false));
+taskBButton.addEventListener("click", () => processWorkbook([...state.selectedJobs], true));
 searchInput.addEventListener("input", renderJobList);
 
 function setFile(file) {
@@ -48,12 +57,13 @@ function setFile(file) {
 
   selectorPanel.classList.add("hidden");
   summaryGrid.classList.add("hidden");
-  downloadButton.classList.add("hidden");
+  downloadRow.classList.add("hidden");
+  taskBResults.classList.add("hidden");
 
   hideError();
 }
 
-async function processWorkbook(selectedJobs) {
+async function processWorkbook(selectedJobs, isTaskB) {
   if (!state.file) {
     showError("Upload an Excel file first.");
     return;
@@ -79,10 +89,7 @@ async function processWorkbook(selectedJobs) {
 
     const blob = await response.blob();
 
-    if (state.downloadUrl) {
-      URL.revokeObjectURL(state.downloadUrl);
-    }
-
+    if (state.downloadUrl) URL.revokeObjectURL(state.downloadUrl);
     state.downloadUrl = URL.createObjectURL(blob);
 
     const disposition = response.headers.get("content-disposition") || "";
@@ -91,21 +98,27 @@ async function processWorkbook(selectedJobs) {
 
     downloadButton.href = state.downloadUrl;
     downloadButton.download = downloadName;
-    downloadButton.classList.remove("hidden");
+    downloadRow.classList.remove("hidden");
 
-    const jobsHeader = response.headers.get("x-job-numbers");
+    const jobsHeader    = response.headers.get("x-job-numbers");
     const summaryHeader = response.headers.get("x-summary");
 
-    if (jobsHeader) {
-      state.jobNumbers = JSON.parse(jobsHeader);
-    }
+    if (jobsHeader) state.jobNumbers = JSON.parse(jobsHeader);
 
+    let summary = {};
     if (summaryHeader) {
-      renderSummary(JSON.parse(summaryHeader));
+      summary = JSON.parse(summaryHeader);
+      renderSummary(summary);
     }
 
     renderJobList();
     selectorPanel.classList.remove("hidden");
+
+    if (isTaskB && summary.taskBJobTotals && summary.taskBJobTotals.length > 0) {
+      renderTaskBResults(summary.taskBJobTotals);
+    } else {
+      taskBResults.classList.add("hidden");
+    }
   } catch (error) {
     showError(error.message);
   } finally {
@@ -116,44 +129,63 @@ async function processWorkbook(selectedJobs) {
 function renderSummary(summary) {
   const metrics = [
     ["Open rows processed", summary.taskAProcessedOpenRows],
-    ["Rows highlighted", summary.taskAHighlightedRows],
-    ["Delivery cells", summary.deliveryCellsWritten],
-    ["Payment cells", summary.paymentCellsWritten],
-    ["Totals written", summary.taskBTotalsWritten],
+    ["Rows highlighted",    summary.taskAHighlightedRows],
+    ["Delivery cells",      summary.deliveryCellsWritten],
+    ["Payment cells",       summary.paymentCellsWritten],
+    ["Totals written",      summary.taskBTotalsWritten],
   ];
 
   summaryGrid.innerHTML = metrics
-    .map(
-      ([label, value]) => `
-        <div class="metric">
-          <span>${label}</span>
-          <strong>${value || 0}</strong>
-        </div>
-      `,
-    )
+    .map(([label, value]) => `
+      <div class="metric">
+        <span>${label}</span>
+        <strong>${value ?? 0}</strong>
+      </div>
+    `)
     .join("");
 
   summaryGrid.classList.remove("hidden");
+}
+
+function renderTaskBResults(jobTotals) {
+  const rows = jobTotals
+    .map((item) => `
+      <tr>
+        <td class="job-number">${escapeHtml(item.jobNumber)}</td>
+        <td class="amount">${escapeHtml(item.total)}</td>
+      </tr>
+    `)
+    .join("");
+
+  taskBTable.innerHTML = `
+    <table class="totals-table">
+      <thead>
+        <tr>
+          <th>Job Number</th>
+          <th>Total LPO Amount</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+
+  taskBResults.classList.remove("hidden");
 }
 
 function renderJobList() {
   const query = searchInput.value.trim().toLowerCase();
 
   const filtered = query
-    ? state.jobNumbers.filter((job) => job.toLowerCase().includes(query))
+    ? state.jobNumbers.filter((j) => j.toLowerCase().includes(query))
     : state.jobNumbers;
 
   jobList.innerHTML = filtered
-    .map(
-      (job) => `
-        <label class="job-option">
-          <input type="checkbox" value="${escapeHtml(job)}" ${
-            state.selectedJobs.has(job) ? "checked" : ""
-          } />
-          <span>${escapeHtml(job)}</span>
-        </label>
-      `,
-    )
+    .map((job) => `
+      <label class="job-option">
+        <input type="checkbox" value="${escapeHtml(job)}" ${state.selectedJobs.has(job) ? "checked" : ""} />
+        <span>${escapeHtml(job)}</span>
+      </label>
+    `)
     .join("");
 
   jobList.querySelectorAll("input").forEach((input) => {
@@ -163,7 +195,6 @@ function renderJobList() {
       } else {
         state.selectedJobs.delete(input.value);
       }
-
       updateSelectedCount();
     });
   });
@@ -173,7 +204,6 @@ function renderJobList() {
 
 function updateSelectedCount() {
   const count = state.selectedJobs.size;
-
   selectedCount.textContent = `${count} selected`;
   taskBButton.disabled = !state.file || count === 0;
 }
@@ -181,13 +211,12 @@ function updateSelectedCount() {
 function setBusy(isBusy) {
   taskAButton.disabled = isBusy || !state.file;
   taskBButton.disabled = isBusy || !state.file || state.selectedJobs.size === 0;
-
   taskAButton.classList.toggle("busy", isBusy);
   taskBButton.classList.toggle("busy", isBusy);
 }
 
-function showError(message) {
-  errorBox.textContent = message;
+function showError(msg) {
+  errorBox.textContent = msg;
   errorBox.classList.remove("hidden");
 }
 
