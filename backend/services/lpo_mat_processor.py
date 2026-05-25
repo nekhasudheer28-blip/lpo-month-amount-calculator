@@ -193,13 +193,26 @@ def _replace_merge(ws, row: int, start_col: int, end_col: int, title: str):
 
 
 def _run_task_a(ws, values_ws, delivery_map: dict[str, int], payment_map: dict[str, int]) -> dict:
+    total_rows = 0
+    closed_rows = 0
     processed_rows = 0
     highlighted_rows = 0
     delivery_cells_written = 0
     payment_cells_written = 0
+    highlighted_row_details = []
 
     for row in range(DATA_START_ROW, ws.max_row + 1):
+        job_number = str(ws.cell(row, JOB_COL).value or "").strip()
         remarks = str(ws.cell(row, REMARKS_COL).value or "").strip().upper()
+
+        if not job_number:
+            continue
+
+        total_rows += 1
+
+        if remarks == "CLOSED":
+            closed_rows += 1
+            continue
 
         if remarks != "OPEN":
             continue
@@ -209,42 +222,57 @@ def _run_task_a(ws, values_ws, delivery_map: dict[str, int], payment_map: dict[s
         lpo_date = _as_datetime(ws.cell(row, LPO_DATE_COL).value)
         amount = values_ws.cell(row, LPO_AMOUNT_COL).value
 
+        delivery_term_text = str(ws.cell(row, DELIVERY_TERMS_COL).value or "").strip()
+        payment_term_text = str(ws.cell(row, PAYMENT_TERMS_COL).value or "").strip()
+
         delivery_result = parse_term(ws.cell(row, DELIVERY_TERMS_COL).value, lpo_date)
         payment_result = parse_term(ws.cell(row, PAYMENT_TERMS_COL).value, lpo_date)
 
         row_unclear = False
+        delivery_ok = False
+        payment_ok = False
 
         if delivery_result:
-            delivery_cells_written += _write_amounts(
-                ws,
-                row,
-                delivery_result.month_labels,
-                delivery_map,
-                amount,
-            )
+            written = _write_amounts(ws, row, delivery_result.month_labels, delivery_map, amount)
+            if written == 0:
+                row_unclear = True
+            else:
+                delivery_cells_written += written
+                delivery_ok = True
         else:
             row_unclear = True
 
         if payment_result:
-            payment_cells_written += _write_amounts(
-                ws,
-                row,
-                payment_result.month_labels,
-                payment_map,
-                amount,
-            )
+            written = _write_amounts(ws, row, payment_result.month_labels, payment_map, amount)
+            if written == 0:
+                row_unclear = True
+            else:
+                payment_cells_written += written
+                payment_ok = True
         else:
             row_unclear = True
 
         if row_unclear:
             highlighted_rows += 1
             _highlight_row(ws, row)
+            highlighted_row_details.append({
+                "rowNumber": row,
+                "jobNumber": job_number,
+                "deliveryTerm": delivery_term_text,
+                "paymentTerm": payment_term_text,
+                "deliveryOk": delivery_ok,
+                "paymentOk": payment_ok,
+            })
 
     return {
+        "totalRows": total_rows,
+        "closedRows": closed_rows,
+        "openRows": processed_rows,
         "taskAProcessedOpenRows": processed_rows,
         "taskAHighlightedRows": highlighted_rows,
         "deliveryCellsWritten": delivery_cells_written,
         "paymentCellsWritten": payment_cells_written,
+        "highlightedRowDetails": highlighted_row_details,
     }
 
 
@@ -286,11 +314,12 @@ def _run_task_b(ws, values_ws, selected_job_numbers: list[str]) -> dict:
     totals_written = 0
 
     if not selected_job_numbers:
-        return {"taskBTotalsWritten": 0}
+        return {"taskBTotalsWritten": 0, "taskBJobTotals": []}
 
     selected = set(selected_job_numbers)
     totals: dict[str, Decimal] = {}
     last_rows: dict[str, int] = {}
+    all_rows: dict[str, list[int]] = {}
 
     for row in range(DATA_START_ROW, ws.max_row + 1):
         job_number = str(ws.cell(row, JOB_COL).value or "").strip()
@@ -305,6 +334,7 @@ def _run_task_b(ws, values_ws, selected_job_numbers: list[str]) -> dict:
 
         totals[job_number] = totals.get(job_number, Decimal("0")) + amount
         last_rows[job_number] = row
+        all_rows.setdefault(job_number, []).append(row)
 
     job_totals = []
 
@@ -315,7 +345,11 @@ def _run_task_b(ws, values_ws, selected_job_numbers: list[str]) -> dict:
         ws.cell(row, TOTAL_COL).fill = PatternFill("solid", fgColor="E2F0D9")
         ws.column_dimensions[get_column_letter(TOTAL_COL)].width = 34
         totals_written += 1
-        job_totals.append({"jobNumber": job_number, "total": formatted})
+        job_totals.append({
+            "jobNumber": job_number,
+            "rows": all_rows.get(job_number, []),
+            "total": formatted,
+        })
 
     return {"taskBTotalsWritten": totals_written, "taskBJobTotals": job_totals}
 
@@ -335,7 +369,7 @@ def _as_datetime(value) -> datetime | None:
 
     text = str(value).strip()
 
-    for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d"):
+    for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d", "%m-%d-%Y"):
         try:
             return datetime.strptime(text, fmt)
         except ValueError:

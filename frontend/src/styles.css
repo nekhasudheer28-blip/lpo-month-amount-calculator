@@ -501,11 +501,282 @@ button:disabled {
 /* ── Utility ────────────────────────────────────────────────── */
 .hidden { display: none !important; }
 
+/* ── Upload drag-over state ─────────────────────────────────── */
+.upload-zone.drag-over {
+  border-color: #1a56db;
+  background: #dbeafe;
+}
+
+/* ── Expand button (on Rows Highlighted card) ───────────────── */
+.expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border: 1px solid #1a56db;
+  border-radius: 5px;
+  background: transparent;
+  color: #1a56db;
+  font-size: 12px;
+  font-weight: 700;
+  min-height: unset;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.expand-btn:hover { background: #dbeafe; transform: none; }
+
+/* ── Highlighted-row collapsible panel ──────────────────────── */
+.highlighted-panel {
+  background: #fff;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.highlighted-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 12px;
+}
+
+.close-panel-btn {
+  background: transparent;
+  border: 0;
+  color: #92400e;
+  font-size: 16px;
+  min-height: unset;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  line-height: 1;
+}
+.close-panel-btn:hover { background: #fef3c7; transform: none; }
+
+.highlighted-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.hl-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.hl-rownum {
+  font-weight: 700;
+  color: #92400e;
+  white-space: nowrap;
+}
+
+.hl-job {
+  color: #1e293b;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+/* ── Status badges ──────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badge-orange { background: #fed7aa; color: #9a3412; }
+.badge-red    { background: #fecaca; color: #991b1b; }
+
+/* ── Unresolved rows section ────────────────────────────────── */
+.unresolved-section {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.unresolved-label {
+  color: #92400e !important;
+  font-size: 15px;
+}
+
+.all-resolved {
+  padding: 14px 0;
+  color: #065f46;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* scrollable wrapper for wide tables */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.unresolved-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 620px;
+}
+
+.unresolved-table thead th {
+  text-align: left;
+  padding: 9px 12px;
+  background: #fef3c7;
+  color: #78350f;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #fbbf24;
+  white-space: nowrap;
+}
+
+.unresolved-table tbody tr {
+  border-bottom: 1px solid #fef3c7;
+  transition: background 0.1s;
+}
+
+.unresolved-table tbody tr:hover { background: #fef9ec; }
+.unresolved-table tbody tr:last-child { border-bottom: none; }
+
+.unresolved-table td {
+  padding: 9px 12px;
+  color: #1e293b;
+  vertical-align: top;
+}
+
+.unresolved-table td.term-cell {
+  max-width: 220px;
+  overflow-wrap: anywhere;
+  color: #475569;
+}
+
+.issue-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.issue-both { background: #fecaca; color: #991b1b; }
+.issue-one  { background: #fed7aa; color: #9a3412; }
+
+/* ── Modal overlay ──────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  width: min(720px, 100%);
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.22);
+  animation: modal-in 0.2s ease;
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+}
+
+.modal-close {
+  background: #f1f5f9;
+  border: 0;
+  border-radius: 6px;
+  color: #64748b;
+  font-size: 15px;
+  min-height: unset;
+  padding: 6px 10px;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+.modal-close:hover { background: #e2e8f0; color: #1e293b; transform: none; }
+
+.modal-body {
+  padding: 16px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 14px 24px 20px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.modal-done-btn {
+  background: #057a55;
+  min-height: 42px;
+  padding: 0 22px;
+  font-size: 14px;
+}
+.modal-done-btn:hover { background: #046c4e; }
+
+/* extra column in modal totals table */
+.totals-table td.row-list {
+  color: #64748b;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  max-width: 200px;
+  overflow-wrap: anywhere;
+}
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 680px) {
-  .app-body { padding: 16px 16px 48px; }
+  .app-body  { padding: 16px 16px 48px; }
   .step-section { padding: 18px; }
   .app-header { padding: 0 16px; }
-  .totals-table thead th:first-child,
-  .totals-table td:first-child { max-width: 180px; overflow-wrap: anywhere; }
+  .modal { max-height: 90vh; }
+  .modal-header, .modal-body, .modal-footer { padding-left: 16px; padding-right: 16px; }
+  .unresolved-table { min-width: 480px; }
 }

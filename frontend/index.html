@@ -28,11 +28,10 @@
             <span class="step-badge">1</span>
             <span>Upload Excel File</span>
           </div>
-
           <label id="uploadZone" class="upload-zone">
             <div class="upload-icon" aria-hidden="true"></div>
             <span id="fileName">Drop the LPO Excel file here, or click to browse</span>
-            <small>Only <strong>LPO MAT - PO</strong> sheet will be processed &nbsp;·&nbsp; .xlsx only</small>
+            <small>Only the <strong>LPO MAT - PO</strong> sheet will be processed &nbsp;·&nbsp; .xlsx only</small>
             <input id="fileInput" type="file" accept=".xlsx" />
           </label>
         </section>
@@ -53,7 +52,26 @@
         </section>
 
         <div id="errorBox" class="error hidden"></div>
+
+        <!-- Task A summary: 7 stat cards -->
         <div id="summaryGrid" class="summary-grid hidden"></div>
+
+        <!-- Collapsible highlighted-row detail panel (Change 1) -->
+        <div id="highlightedPanel" class="highlighted-panel hidden">
+          <div class="highlighted-panel-head">
+            <span>Highlighted Rows Detail</span>
+            <button class="close-panel-btn" onclick="closeHighlightedPanel()" aria-label="Close panel">✕</button>
+          </div>
+          <div id="highlightedList" class="highlighted-list"></div>
+        </div>
+
+        <!-- Unresolved rows section (Change 3) -->
+        <section id="unresolvedSection" class="step-section unresolved-section hidden">
+          <div class="step-label unresolved-label">
+            <span>&#9888; Rows Requiring Manual Review</span>
+          </div>
+          <div id="unresolvedContent"></div>
+        </section>
 
         <!-- Step 3: Job selector -->
         <section id="selectorPanel" class="step-section hidden">
@@ -78,16 +96,7 @@
           </div>
         </section>
 
-        <!-- Step 4: Task B results -->
-        <section id="taskBResults" class="step-section results-panel hidden">
-          <div class="step-label">
-            <span class="step-badge success-badge">4</span>
-            <span>Task B Results — LPO Totals</span>
-          </div>
-          <div id="taskBTable"></div>
-        </section>
-
-        <!-- Download -->
+        <!-- Download (hidden until Task A completes, or after modal is closed for Task B) -->
         <div id="downloadRow" class="download-row hidden">
           <a id="downloadButton" class="download-button" href="#" download>
             <span class="button-icon download-icon" aria-hidden="true"></span>
@@ -95,8 +104,22 @@
           </a>
         </div>
 
-      </div>
+      </div><!-- /.workspace -->
     </main>
+
+    <!-- Task B modal (Change 2) -->
+    <div id="taskBModalOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="modalTitle">Task B — LPO Amount Totals</h2>
+          <button id="modalCloseBtn" class="modal-close" aria-label="Close">&#10005;</button>
+        </div>
+        <div id="modalBody" class="modal-body"></div>
+        <div class="modal-footer">
+          <button id="modalDoneBtn" class="modal-done-btn">Close &amp; Proceed to Download</button>
+        </div>
+      </div>
+    </div>
 
     <script src="./src/config.js"></script>
     <script src="./src/app.js"></script>

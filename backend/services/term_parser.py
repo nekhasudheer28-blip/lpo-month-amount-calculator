@@ -53,7 +53,7 @@ def parse_term(term_text, start_date: datetime) -> ParseResult | None:
 
     normalized = re.sub(r"\s+", " ", text.lower())
 
-    if re.search(r"\b(ex[- ]?stock|current date cheque|cash|cdc in advance)\b", normalized):
+    if re.search(r"\b(ex[- ]?stock|current date cheque|cash(?!\s+\d)|cdc in advance|in advance|at sight|payable at sight|cash on delivery|cod)\b", normalized):
         return ParseResult([month_label(start_date)], "Immediate/current date term")
 
     explicit = _parse_explicit_months(normalized, start_date)
